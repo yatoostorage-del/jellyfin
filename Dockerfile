@@ -5,10 +5,9 @@ RUN apt-get update && apt-get install -y python3 python3-pip && \
     apt-get clean
 
 COPY strm_sync.py /app/strm_sync.py
-
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
 EXPOSE 8096
 
-CMD ["/start.sh"]
+ENTRYPOINT ["/start.sh"]
