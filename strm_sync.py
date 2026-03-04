@@ -5,7 +5,7 @@ from urllib.parse import quote
 BASE     = "https://app-6afe2243-5fc2-4bc7-8e79-21fc365debdf.cleverapps.io"   # e.g. https://app-xxxx.cleverapps.io
 MEDIA    = Path("./media")
 STATE    = MEDIA / ".state.json"
-INTERVAL = 300
+INTERVAL = 120
 VIDEO    = {".mkv", ".mp4", ".avi", ".mov", ".m4v", ".ts"}
 
 S = requests.Session()
