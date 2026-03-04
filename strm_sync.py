@@ -2,7 +2,7 @@ import time, json, requests
 from pathlib import Path
 from urllib.parse import quote
 
-BASE     = "https://app-6afe2243-5fc2-4bc7-8e79-21fc365debdf.cleverapps.io"   # e.g. https://app-xxxx.cleverapps.io
+BASE     = "https://app-9fc0f0fd-fcb7-4e8a-8357-ea455d9c28c1.cleverapps.io"   # e.g. https://app-xxxx.cleverapps.io
 MEDIA    = Path("./media")
 STATE    = MEDIA / ".state.json"
 INTERVAL = 120
