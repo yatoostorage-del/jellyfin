@@ -2,23 +2,21 @@ import time, json, requests
 from pathlib import Path
 from urllib.parse import quote
 
-BASE     = "https://yatoo.tualbola.workers.dev"
-MEDIA    = Path("/media")
+BASE     = "https://app-6afe2243-5fc2-4bc7-8e79-21fc365debdf.cleverapps.io"   # e.g. https://app-xxxx.cleverapps.io
+MEDIA    = Path("./media")
 STATE    = MEDIA / ".state.json"
 INTERVAL = 300
 VIDEO    = {".mkv", ".mp4", ".avi", ".mov", ".m4v", ".ts"}
 
 S = requests.Session()
-S.headers.update({"User-Agent": "Mozilla/5.0"})
 
 def log(msg): print(msg, flush=True)
 
 def api_list(path):
-    """BhadooGDIndex real API - POST to directory URL"""
-    url = f"{BASE}/{path}/"
-    r = S.post(url, data={"password": "", "page_token": "", "page_index": "0"}, timeout=30)
+    r = S.post(f"{BASE}/api/fs/list", 
+               json={"path": path, "password": "", "page": 1, "per_page": 0, "refresh": False},
+               timeout=30)
     r.raise_for_status()
-    log(f"  [DEBUG] POST {url} → {r.status_code} | {r.text[:200]}")
     return r.json()
 
 def clean(name):
@@ -36,21 +34,22 @@ def scan(path, prefix):
     try:
         data = api_list(path)
     except Exception as e:
-        log(f"  [ERR] scan({path}): {e}")
-        return found
+        log(f"  [ERR] {path}: {e}"); return found
 
-    files = data.get("data", {}).get("files", [])
+    if data.get("code") != 200:
+        log(f"  [ERR] {path}: {data.get('message')}"); return found
+
+    files = data.get("data", {}).get("content") or []
     log(f"\n[{prefix}] {len(files)} items")
 
     for i, f in enumerate(files, 1):
-        name  = f.get("name", "")
-        is_dir = f.get("mimeType", "") == "application/vnd.google-apps.folder"
+        name   = f.get("name", "")
+        is_dir = f.get("is_dir", False)
         log(f"  [{i}/{len(files)}] {'📁' if is_dir else '🎬'} {name}")
-
         if is_dir:
             found.update(scan(f"{path}/{name}", f"{prefix}/{clean(name)}"))
         elif Path(name).suffix.lower() in VIDEO:
-            url = f"{BASE}/{path}/{quote(name)}"
+            url = f"{BASE}/d{path}/{quote(name)}"
             key = f"{prefix}/{clean(Path(name).stem)}.strm"
             found[key] = url
             log(f"       → {url}")
@@ -78,9 +77,7 @@ def run():
     log("Sync started")
     log("=" * 50)
     state  = load()
-    remote = {}
-    remote.update(scan("0:/Movies", "Movies"))
-    remote.update(scan("0:/Series", "Series"))
+    remote = {**scan("/gdrive/Movies", "Movies"), **scan("/gdrive/Series", "Series")}
     log("\nApplying changes...")
     apply(remote, state)
     save(remote)
